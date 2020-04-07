@@ -3,7 +3,7 @@ const FRICTION = 0.7; //friction coefficient of space (0 = no friction, 1 = lots
 const ROIDS_NUM = 3; //starting number of astroids 
 const ROIDS_SIZE = 100; //starting size of the astroids in pixels 
 const ROID_SPD = 50; //max starting speed of astroids in pizels per second
-const ROID_VERT = 10; //average number of vertices on each asteroid
+const ROIDS_VERT = 10; //average number of vertices on each asteroid
 const SHIP_SIZE = 30;  //ship height in pixels 
 const SHIP_PUSH = 5; //acceleration of the ship in pixels per second. each second increases by 5  
 const TURN_SPEED = 360; //turn speed in the degrees per second 
@@ -49,9 +49,9 @@ function createAsteroidBelt() {
     roids = [];
     var x, y;
     //loop
-    for (var i = o; i < ROIDS_NUM; i++) {
-        x = Math.floor(Math.random() * canvas.width);
-        y = Math.floor(Math.random() * canvas.height);
+    for (var i = 0; i < ROIDS_NUM; i++) {
+        x = Math.floor(Math.random() * canv.width);
+        y = Math.floor(Math.random() * canv.height);
         roids.push(newAsteroid(x, y));
     }
 }
@@ -175,13 +175,32 @@ function update() {
     //draw the astriods, loop through each 
     ctx.strokeStyle = "slategrey"; 
     ctx.lineWidth = SHIP_SIZE / 20; 
+    
     for (var i = 0; i < roids.length; i++) {
 
-        //draw a path 
+        //get the asteroid properties 
+        x = roids[i].x;
+        y = roids[i].y; 
+        r = roids[i].r; 
+        a = roids[i].a; 
+        vert = roids[i].vert; 
 
+        //draw a path 
+        ctx.beginPath(); 
+        ctx.moveTo(
+            x + r * Math.cos(a), 
+            y + r * Math.sin(a)
+        ); 
 
         //draw the polygon 
-
+        for (var j = 0; j < vert; j++) {
+            ctx.lineTo(
+                x + r * Math.cos(a + j * Math.PI * 2 / vert),
+                y + r * Math.sin(a + j * Math.PI * 2 /vert)
+            ); 
+        }
+        ctx.closePath(); 
+        ctx.stroke(); //draws it 
 
         //move the asteroid
 
