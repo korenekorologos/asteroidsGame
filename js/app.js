@@ -1,5 +1,9 @@
 const FPS = 30; //the frames per second 
 const FRICTION = 0.7; //friction coefficient of space (0 = no friction, 1 = lots of friction)
+const ROIDS_NUM = 3; //starting number of astroids 
+const ROIDS_SIZE = 100; //starting size of the astroids in pixels 
+const ROID_SPD = 50; //max starting speed of astroids in pizels per second
+const ROID_VERT = 10; //average number of vertices on each asteroid
 const SHIP_SIZE = 30;  //ship height in pixels 
 const SHIP_PUSH = 5; //acceleration of the ship in pixels per second. each second increases by 5  
 const TURN_SPEED = 360; //turn speed in the degrees per second 
@@ -26,7 +30,8 @@ var ship = {
 }
 
 //astroids 
-
+var roids = [];
+createAsteroidBelt();
 
 
 //event handlers 
@@ -38,6 +43,18 @@ document.addEventListener("keyup", keyUp); //when the key is released
 
 //game loop, for animation 
 setInterval(update, 1000 / FPS);
+
+
+function createAsteroidBelt() {
+    roids = [];
+    var x, y;
+    //loop
+    for (var i = o; i < ROIDS_NUM; i++) {
+        x = Math.floor(Math.random() * canvas.width);
+        y = Math.floor(Math.random() * canvas.height);
+        roids.push(newAsteroid(x, y));
+    }
+}
 
 
 function keyDown(/** @type {KeyboardEvent} */ ev) {
@@ -71,6 +88,22 @@ function keyUp(/** @type {KeyboardEvent} */ ev) {
     }
 }
 
+
+function newAsteroid(x, y) {
+    var roid = {
+        x: x,
+        y: y,
+        //positive and negative direction they're going 
+        xv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
+        yv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
+        r: ROIDS_SIZE / 2,
+        a: Math.random() * Math.PI * 2, //in radians 
+        vert: Math.floor(Math.random() * (ROIDS_VERT + 1) + ROIDS_VERT / 2) 
+    };
+    return roid; 
+}
+
+
 function update() {
     //draw space 
     ctx.fillStyle = "black";
@@ -84,28 +117,28 @@ function update() {
 
 
         //flame from the rocket 
-        ctx.fillStyle = "red"; 
+        ctx.fillStyle = "red";
         ctx.strokeStyle = "yellow";
-            ctx.lineWidth = SHIP_SIZE / 10; //makes for a thicker line
+        ctx.lineWidth = SHIP_SIZE / 10; //makes for a thicker line
         ctx.beginPath();
 
         ctx.moveTo( //rear left 
-            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),  
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),
             ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - 0.5 * Math.cos(ship.a))
         );
 
         ctx.lineTo(  //rear center, behind the ship 
-            ship.x - ship.r * 6 / 3 * Math.cos(ship.a),  
+            ship.x - ship.r * 6 / 3 * Math.cos(ship.a),
             ship.y + ship.r * 6 / 3 * Math.sin(ship.a)
         );
 
         ctx.lineTo(  //rear right of the ship 
-            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),  
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),
             ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + 0.5 * Math.cos(ship.a))
         );
 
-        ctx.closePath();  
-        ctx.fill(); 
+        ctx.closePath();
+        ctx.fill();
         ctx.stroke();
 
 
@@ -116,8 +149,8 @@ function update() {
 
 
     //draw triangular ship 
-    ctx.strokeStyle = "white"; 
-        ctx.lineWidth = SHIP_SIZE / 20;
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = SHIP_SIZE / 20;
     ctx.beginPath();
 
     ctx.moveTo( //nose of the ship 
@@ -137,6 +170,27 @@ function update() {
 
     ctx.closePath();  //closes the lines from the right & left rears 
     ctx.stroke();
+
+
+    //draw the astriods, loop through each 
+    ctx.strokeStyle = "slategrey"; 
+    ctx.lineWidth = SHIP_SIZE / 20; 
+    for (var i = 0; i < roids.length; i++) {
+
+        //draw a path 
+
+
+        //draw the polygon 
+
+
+        //move the asteroid
+
+
+        //handle edge of screen 
+
+
+    }
+
 
     //rotate ship 
     ship.a += ship.rot;
