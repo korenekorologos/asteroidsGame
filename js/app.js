@@ -1,7 +1,7 @@
 const FPS = 30; //the frames per second 
 const FRICTION = 0.7; //friction coefficient of space (0 = no friction, 1 = lots of friction)
 const ROIDS_JAG = 0.4; //jaggedness of the asteroids. 0 = none. 1 = lots 
-const ROIDS_NUM = 3; //starting number of astroids 
+const ROIDS_NUM = 7; //starting number of astroids 
 const ROIDS_SIZE = 100; //starting size of the astroids in pixels 
 const ROID_SPD = 50; //max starting speed of astroids in pizels per second
 const ROIDS_VERT = 10; //average number of vertices on each asteroid
@@ -51,7 +51,7 @@ function createAsteroidBelt() {
     var x, y;
     //loop
     for (var i = 0; i < ROIDS_NUM; i++) {
-//makes it so that asteriod is not positioned on the rocket when starting the game
+        //makes it so that asteriod is not positioned on the rocket when starting the game
         do {
             x = Math.floor(Math.random() * canv.width);
             y = Math.floor(Math.random() * canv.height);
@@ -61,7 +61,7 @@ function createAsteroidBelt() {
 }
 
 function distBetweenPoints(x1, y1, x2, y2) {
-    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)); 
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 }
 
 
@@ -112,7 +112,7 @@ function newAsteroid(x, y) {
 
     //create the vertex which offsets array 
     for (var i = 0; i < roid.vert; i++) {
-        roid.offs.push(Math.random() * ROIDS_JAG * 2 + 1 - ROIDS_JAG); 
+        roid.offs.push(Math.random() * ROIDS_JAG * 2 + 1 - ROIDS_JAG);
     }
 
     return roid;
@@ -191,7 +191,7 @@ function update() {
     //draw the astriods, loop through each 
     ctx.strokeStyle = "slategrey";
     ctx.lineWidth = SHIP_SIZE / 20;
-    var x, y, r, a, vert, offs; 
+    var x, y, r, a, vert, offs;
 
     for (var i = 0; i < roids.length; i++) {
 
@@ -201,7 +201,7 @@ function update() {
         r = roids[i].r;
         a = roids[i].a;
         vert = roids[i].vert;
-        offs = roids[i].offs; 
+        offs = roids[i].offs;
 
         //draw a path 
         ctx.beginPath();
@@ -221,40 +221,51 @@ function update() {
         ctx.closePath();
         ctx.stroke(); //draws it 
 
-        //move the asteroid
+        //moves the asteroids, in different speeds & directions
+        roids[i].x += roids[i].xv;
+        roids[i].y += roids[i].yv;
 
+        //makes it so that astroids don't disapear off the screen 
+        //for the x direction 
+        if (roids[i].x < 0 - roids[i].r) {
+            roids[i].x = canv.width + roids[i].r;
+        } else if (roids[i].x > canv.width + roids[i].r) {
+            roids[i].x = 0 - roids[i].r
+        }
 
-        //handle edge of screen 
-
-
+    //for the y direction 
+         if (roids[i].y < 0 - roids[i].r) {
+            roids[i].y = canv.height + roids[i].r;
+        } else if (roids[i].y > canv.height + roids[i].r) {
+        roids[i].y = 0 - roids[i].r
     }
+}
+
+//rotate ship 
+ship.a += ship.rot;
+
+//move the ship
+ship.x += ship.push.x;
+ship.y += ship.push.y;
+
+//so that the rocket doesn't get lost off of the screen. this will make it so
+//that it comes back to the screen 
+if (ship.x < 0 - ship.r) {
+    ship.x = canv.width + ship.r;
+} else if (ship.x > canv.width + ship.r) {
+    ship.x = 0 - ship.r;
+}
+if (ship.y < 0 - ship.r) {
+    ship.y = canv.height + ship.r;
+} else if (ship.y > canv.height + ship.r) {
+    ship.y = 0 - ship.r;
+}
+
+//centre dot 
 
 
-    //rotate ship 
-    ship.a += ship.rot;
 
-    //move the ship
-    ship.x += ship.push.x;
-    ship.y += ship.push.y;
-
-    //so that the rocket doesn't get lost off of the screen. this will make it so
-    //that it comes back to the screen 
-    if (ship.x < 0 - ship.r) {
-        ship.x = canv.width + ship.r;
-    } else if (ship.x > canv.width + ship.r) {
-        ship.x = 0 - ship.r;
-    }
-    if (ship.y < 0 - ship.r) {
-        ship.y = canv.height + ship.r;
-    } else if (ship.y > canv.height + ship.r) {
-        ship.y = 0 - ship.r;
-    }
-
-    //centre dot 
-
-
-
-    ctx.fillStyle = "red";
+ctx.fillStyle = "red";
     //ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2);
 
 }
