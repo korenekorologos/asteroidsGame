@@ -1,5 +1,6 @@
 const FPS = 30; //the frames per second 
 const FRICTION = 0.7; //friction coefficient of space (0 = no friction, 1 = lots of friction)
+const ROIDS_JAG = 0.4; //jaggedness of the asteroids. 0 = none. 1 = lots 
 const ROIDS_NUM = 3; //starting number of astroids 
 const ROIDS_SIZE = 100; //starting size of the astroids in pixels 
 const ROID_SPD = 50; //max starting speed of astroids in pizels per second
@@ -50,10 +51,17 @@ function createAsteroidBelt() {
     var x, y;
     //loop
     for (var i = 0; i < ROIDS_NUM; i++) {
-        x = Math.floor(Math.random() * canv.width);
-        y = Math.floor(Math.random() * canv.height);
+//makes it so that asteriod is not positioned on the rocket when starting the game
+        do {
+            x = Math.floor(Math.random() * canv.width);
+            y = Math.floor(Math.random() * canv.height);
+        } while (distBetweenPoints(ship.x, ship.y, x, y) < ROIDS_SIZE * 2 + ship.r);
         roids.push(newAsteroid(x, y));
     }
+}
+
+function distBetweenPoints(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)); 
 }
 
 
@@ -98,9 +106,17 @@ function newAsteroid(x, y) {
         yv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
         r: ROIDS_SIZE / 2,
         a: Math.random() * Math.PI * 2, //in radians 
-        vert: Math.floor(Math.random() * (ROIDS_VERT + 1) + ROIDS_VERT / 2) 
+        vert: Math.floor(Math.random() * (ROIDS_VERT + 1) + ROIDS_VERT / 2),
+        offs: []
     };
-    return roid; 
+
+    //create the vertex which offsets array 
+    for (var i = 0; i < roid.vert; i++) {
+        roid.offs.push(Math.random() * ROIDS_JAG * 2 + 1 - ROIDS_JAG); 
+    }
+
+    return roid;
+
 }
 
 
@@ -173,33 +189,36 @@ function update() {
 
 
     //draw the astriods, loop through each 
-    ctx.strokeStyle = "slategrey"; 
-    ctx.lineWidth = SHIP_SIZE / 20; 
-    
+    ctx.strokeStyle = "slategrey";
+    ctx.lineWidth = SHIP_SIZE / 20;
+    var x, y, r, a, vert, offs; 
+
     for (var i = 0; i < roids.length; i++) {
 
         //get the asteroid properties 
         x = roids[i].x;
-        y = roids[i].y; 
-        r = roids[i].r; 
-        a = roids[i].a; 
-        vert = roids[i].vert; 
+        y = roids[i].y;
+        r = roids[i].r;
+        a = roids[i].a;
+        vert = roids[i].vert;
+        offs = roids[i].offs; 
 
         //draw a path 
-        ctx.beginPath(); 
+        ctx.beginPath();
         ctx.moveTo(
-            x + r * Math.cos(a), 
-            y + r * Math.sin(a)
-        ); 
+            x + r * offs[0] * Math.cos(a),
+            y + r * offs[0] * Math.sin(a)
+        );
 
         //draw the polygon 
-        for (var j = 0; j < vert; j++) {
+        //the polygon sizes and sides are random. they vary from 5-15 sided
+        for (var j = 1; j < vert; j++) {
             ctx.lineTo(
-                x + r * Math.cos(a + j * Math.PI * 2 / vert),
-                y + r * Math.sin(a + j * Math.PI * 2 /vert)
-            ); 
+                x + r * offs[j] * Math.cos(a + j * Math.PI * 2 / vert),
+                y + r * offs[j] * Math.sin(a + j * Math.PI * 2 / vert)
+            );
         }
-        ctx.closePath(); 
+        ctx.closePath();
         ctx.stroke(); //draws it 
 
         //move the asteroid
