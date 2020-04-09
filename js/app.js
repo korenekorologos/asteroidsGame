@@ -8,6 +8,8 @@ const ROIDS_VERT = 10; //average number of vertices on each asteroid
 const SHIP_SIZE = 30;  //ship height in pixels 
 const SHIP_PUSH = 5; //acceleration of the ship in pixels per second. each second increases by 5  
 const TURN_SPEED = 360; //turn speed in the degrees per second 
+const SHOW_BOUNDING = true;  //show or hide collision bounding 
+const SHOW_CENTRE_DOT = false; //show or hide ships center dot 
 
 
 /**@type {HTML CanvasElement} */
@@ -62,6 +64,16 @@ function createAsteroidBelt() {
 
 function distBetweenPoints(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+
+function explodeShip() {
+    ctx.fillStyle = "lime"; 
+    ctx.strokeStyle = "lime";
+    ctx.beginPath();
+    ctx.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false);
+    ctx.stroke();
+    ctx.fill(); 
 }
 
 
@@ -157,6 +169,14 @@ function update() {
         ctx.fill();
         ctx.stroke();
 
+        //lime circle around ship 
+        if (SHOW_BOUNDING) {
+            ctx.strokeStyle = "lime";
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false);
+            ctx.stroke();
+        }
+
 
     } else {
         ship.push.x -= FRICTION * ship.push.x / FPS;
@@ -189,11 +209,12 @@ function update() {
 
 
     //draw the astriods, loop through each 
-    ctx.strokeStyle = "slategrey";
-    ctx.lineWidth = SHIP_SIZE / 20;
     var x, y, r, a, vert, offs;
 
+
     for (var i = 0; i < roids.length; i++) {
+        ctx.strokeStyle = "slategrey";
+        ctx.lineWidth = SHIP_SIZE / 20;
 
         //get the asteroid properties 
         x = roids[i].x;
@@ -221,7 +242,53 @@ function update() {
         ctx.closePath();
         ctx.stroke(); //draws it 
 
-        //moves the asteroids, in different speeds & directions
+
+        if (SHOW_BOUNDING) {
+            ctx.strokeStyle = "lime";
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2, false);
+            ctx.stroke();
+        }
+    }
+
+
+    //centre dot 
+    if (SHOW_CENTRE_DOT) {
+        ctx.fillStyle = "red"; 
+        ctx.fillRect(ship.x - 1, ship.y -1, 2, 2); 
+    }
+
+
+    //create asteroid collisions 
+    for (var i = 0; i < roids.length; i++) {
+        if (distBetweenPoints(ship.x, ship.y, roids[i].x, roids[i].y) < ship.r + roids[i].r) {
+            explodeShip(); 
+        }
+    }    
+
+
+    //rotate ship 
+    ship.a += ship.rot;
+
+    //move the ship
+    ship.x += ship.push.x;
+    ship.y += ship.push.y;
+
+    //so that the rocket doesn't get lost off of the screen. this will make it so
+    //that it comes back to the screen 
+    if (ship.x < 0 - ship.r) {
+        ship.x = canv.width + ship.r;
+    } else if (ship.x > canv.width + ship.r) {
+        ship.x = 0 - ship.r;
+    }
+    if (ship.y < 0 - ship.r) {
+        ship.y = canv.height + ship.r;
+    } else if (ship.y > canv.height + ship.r) {
+        ship.y = 0 - ship.r;
+    }
+
+    //moves the asteroids, in different speeds & directions
+    for (var i = 0; i < roids.length; i++) {
         roids[i].x += roids[i].xv;
         roids[i].y += roids[i].yv;
 
@@ -233,39 +300,16 @@ function update() {
             roids[i].x = 0 - roids[i].r
         }
 
-    //for the y direction 
-         if (roids[i].y < 0 - roids[i].r) {
+        //for the y direction 
+        if (roids[i].y < 0 - roids[i].r) {
             roids[i].y = canv.height + roids[i].r;
         } else if (roids[i].y > canv.height + roids[i].r) {
-        roids[i].y = 0 - roids[i].r
+            roids[i].y = 0 - roids[i].r
+        }
+
     }
-}
 
-//rotate ship 
-ship.a += ship.rot;
-
-//move the ship
-ship.x += ship.push.x;
-ship.y += ship.push.y;
-
-//so that the rocket doesn't get lost off of the screen. this will make it so
-//that it comes back to the screen 
-if (ship.x < 0 - ship.r) {
-    ship.x = canv.width + ship.r;
-} else if (ship.x > canv.width + ship.r) {
-    ship.x = 0 - ship.r;
-}
-if (ship.y < 0 - ship.r) {
-    ship.y = canv.height + ship.r;
-} else if (ship.y > canv.height + ship.r) {
-    ship.y = 0 - ship.r;
-}
-
-//centre dot 
-
-
-
-ctx.fillStyle = "red";
+    //ctx.fillStyle = "red";
     //ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2);
 
 }
