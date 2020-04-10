@@ -1,6 +1,7 @@
 const FPS = 30; //the frames per second 
 const FRICTION = 0.7; //friction coefficient of space (0 = no friction, 1 = lots of friction)
 const LASER_MAX = 10; //maximum number of lasers on screen at once  
+
 const LASER_SPD = 500; //speed of lasers in pixels per second 
 const ROID_JAG = 0.4; //jaggedness of the asteroids. 0 = none. 1 = lots 
 const ROID_NUM = 7; //starting number of astroids 
@@ -458,6 +459,18 @@ function update() {
     for (var i = 0; i < ship.lasers.length; i++) {
         ship.lasers[i].x += ship.lasers[i].xv; 
         ship.lasers[i].y += ship.lasers[i].yv; 
+
+        //handle edge of screen 
+       if (ship.lasers[i].x < 0) {
+           ship.lasers[i].x = canv.width; 
+       } else if (ship.lasers[i].x > canv.width) {
+           ship.lasers[i].x = 0; 
+       }
+       if (ship.lasers[i].y < 0) {
+           ship.lasers[i].y = canv.height; 
+       } else if (ship.lasers[i].y >canv.height) {
+           ship.lasers[i].y = 0; 
+       }
     }
 
 
