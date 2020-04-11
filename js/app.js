@@ -1,7 +1,7 @@
 const FPS = 30; //the frames per second 
 const FRICTION = 0.7; //friction coefficient of space (0 = no friction, 1 = lots of friction)
 const LASER_MAX = 10; //maximum number of lasers on screen at once  
-
+const LASER_DIST = 0.6; //max distance laser can travel as fraction of screen width 
 const LASER_SPD = 500; //speed of lasers in pixels per second 
 const ROID_JAG = 0.4; //jaggedness of the asteroids. 0 = none. 1 = lots 
 const ROID_NUM = 7; //starting number of astroids 
@@ -169,7 +169,8 @@ function shootLaser() {
             x: ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
             y: ship.y - 4 / 3 * ship.r * Math.sin(ship.a),
             xv: LASER_SPD * Math.cos(ship.a) / FPS,
-            yv: -LASER_SPD * Math.sin(ship.a) / FPS
+            yv: -LASER_SPD * Math.sin(ship.a) / FPS,
+            dist: 0
         });
     }
 
@@ -416,6 +417,38 @@ function update() {
     }
 
 
+    //detect laser hits on asteriods 
+    //asteriods: ax, ay & ar. lasers: lx, ly 
+    var ax, ay, ar, lx, ly; 
+    for (var i = roids.length -1; i >= 0; i--) {
+
+        //grab the asteriod properties 
+        ax = roids[i].x; 
+        ay = roids[i].y; 
+        ar = roids[i].r; 
+
+        //loop over the lasers 
+        for (var j = ship.lasers.length -1; j >= 0; j--) {
+
+            //grab the laser properties 
+            lx = ship.lasers[j].x; 
+            ly = ship.lasers[j].y; 
+
+            //detect hits 
+            if (distBetweenPoints(ax, ay, lx, ly) <ar) {
+                //remove the laser 
+                ship.lasers.splice(j, 1); 
+
+                //remove the asteriod
+                roids.splice(i, 1); 
+
+                break; //once its been detected 
+            }
+        }
+
+    }
+
+
     //create asteroid collisions 
     if (!exploding) {
         //notcheck if not blinking 
@@ -456,21 +489,34 @@ function update() {
 
 
     //move the lasers 
-    for (var i = 0; i < ship.lasers.length; i++) {
-        ship.lasers[i].x += ship.lasers[i].xv; 
-        ship.lasers[i].y += ship.lasers[i].yv; 
+    for (var i = ship.lasers.length - 1; i >= 0; i--) {
+        //check distance traveled 
+        if(ship.lasers[i].dist > LASER_DIST * canv.width) {
+            //if its greater then that means that it has gone far enough and we want to delete it 
+            ship.lasers.splice(i, 1); 
+            continue; //skips over and goes to next iteration of the for loop 
+        }
+
+
+        //moves the laser 
+        ship.lasers[i].x += ship.lasers[i].xv;
+        ship.lasers[i].y += ship.lasers[i].yv;
+
+        //calculate the distance travelled 
+        ship.lasers[i].dist += Math.sqrt(Math.pow(ship.lasers[i].xv, 2) + Math.pow(ship.lasers[i].yv, 2)); 
+
 
         //handle edge of screen 
-       if (ship.lasers[i].x < 0) {
-           ship.lasers[i].x = canv.width; 
-       } else if (ship.lasers[i].x > canv.width) {
-           ship.lasers[i].x = 0; 
-       }
-       if (ship.lasers[i].y < 0) {
-           ship.lasers[i].y = canv.height; 
-       } else if (ship.lasers[i].y >canv.height) {
-           ship.lasers[i].y = 0; 
-       }
+        if (ship.lasers[i].x < 0) {
+            ship.lasers[i].x = canv.width;
+        } else if (ship.lasers[i].x > canv.width) {
+            ship.lasers[i].x = 0;
+        }
+        if (ship.lasers[i].y < 0) {
+            ship.lasers[i].y = canv.height;
+        } else if (ship.lasers[i].y > canv.height) {
+            ship.lasers[i].y = 0;
+        }
     }
 
 
