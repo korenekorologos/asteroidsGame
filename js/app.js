@@ -67,8 +67,27 @@ function createAsteroidBelt() {
             x = Math.floor(Math.random() * canv.width);
             y = Math.floor(Math.random() * canv.height);
         } while (distBetweenPoints(ship.x, ship.y, x, y) < ROID_SIZE * 2 + ship.r);
-        roids.push(newAsteroid(x, y));
+        roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 2)));
     }
+}
+
+function destroyAsteroid(index) {
+    var x = roids[index].x; 
+    var y = roids[index].y; 
+    var r = roids[index].r; 
+
+    //split the asteriod in two, if necessary 
+    if (r == Math.ceil(ROID_SIZE / 2)) /**the bigest size**/ {
+        roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 4))); 
+        roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 4))); 
+    } else if (r == Math.ceil(ROID_SIZE / 4)) {
+        //same location as above, just in smaller pieces 
+        roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8))); 
+        roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8))); 
+    }
+    //destroy the asteriods 
+    //index will be the start number 
+    roids.splice(index, 1); 
 }
 
 function distBetweenPoints(x1, y1, x2, y2) {
@@ -119,14 +138,14 @@ function keyUp(/** @type {KeyboardEvent} */ ev) {
 }
 
 
-function newAsteroid(x, y) {
+function newAsteroid(x, y, r) {
     var roid = {
         x: x,
         y: y,
         //positive and negative direction they're going 
         xv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
         yv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
-        r: ROID_SIZE / 2,
+        r: r,
         a: Math.random() * Math.PI * 2, //in radians 
         vert: Math.floor(Math.random() * (ROID_VERT + 1) + ROID_VERT / 2),
         offs: []
@@ -440,7 +459,8 @@ function update() {
                 ship.lasers.splice(j, 1); 
 
                 //remove the asteriod
-                roids.splice(i, 1); 
+                destroyAsteroid(i); 
+                // roids.splice(i, 1); 
 
                 break; //once its been detected 
             }
@@ -456,6 +476,7 @@ function update() {
             for (var i = 0; i < roids.length; i++) {
                 if (distBetweenPoints(ship.x, ship.y, roids[i].x, roids[i].y) < ship.r + roids[i].r) {
                     explodeShip();
+                    destroyAsteroid(i); 
                 }
             }
         }
