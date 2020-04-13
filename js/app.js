@@ -1,11 +1,12 @@
 const FPS = 30; //the frames per second 
 const FRICTION = 0.7; //friction coefficient of space (0 = no friction, 1 = lots of friction)
+const GAME_LIVES = 3; //starting number of lives 
 const LASER_MAX = 10; //maximum number of lasers on screen at once  
 const LASER_DIST = 0.6; //max distance laser can travel as fraction of screen width 
 const LASER_EXPLODE_DUR = 0.1; //duration of the lasers' explosion in seconds 
 const LASER_SPD = 500; //speed of lasers in pixels per second 
 const ROID_JAG = 0.4; //jaggedness of the asteroids. 0 = none. 1 = lots 
-const ROID_NUM = 7; //starting number of astroids 
+const ROID_NUM = 1; //starting number of astroids 
 const ROID_SIZE = 100; //starting size of the astroids in pixels 
 const ROID_SPD = 50; //max starting speed of astroids in pizels per second
 const ROID_VERT = 10; //average number of vertices on each asteroid
@@ -17,6 +18,8 @@ const SHIP_PUSH = 5; //acceleration of the ship in pixels per second. each secon
 const SHIP_TURN_SPD = 360; //turn speed in the degrees per second 
 const SHOW_BOUNDING = false;  //show or hide collision bounding 
 const SHOW_CENTRE_DOT = false; //show or hide ships center dot 
+const TEXT_FADE_TIME = 2.5; //text fade time in seconds 
+const TEXT_SIZE = 40; //text font height in pixels 
 
 
 /**@type {HTML CanvasElement} */
@@ -24,7 +27,7 @@ var canv = document.getElementById("gameCanvas"); //canvas info
 var ctx = canv.getContext("2d"); //context from canvas 
 
 //sets up the game parameters 
-var level, roids, ship;
+var level, lives, roids, ship, text, textAlpha;
 newGame(); //method for when the game is over 
 
 
@@ -70,10 +73,42 @@ function destroyAsteroid(index) {
     //destroy the asteriods 
     //index will be the start number 
     roids.splice(index, 1);
+
+    //new level when there's no more asteriods 
+    if (roids.length == 0) {
+        level++;
+        newLevel();
+    }
 }
+
 
 function distBetweenPoints(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+
+function drawShip(x, y, a) {
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = SHIP_SIZE / 20;
+    ctx.beginPath();
+
+    ctx.moveTo( //nose of the ship 
+        x + 4 / 3 * ship.r * Math.cos(a),
+        y - 4 / 3 * ship.r * Math.sin(a) //negative represents upwards on the screen 
+    );
+
+    ctx.lineTo(  //rear left of the ship 
+        x - ship.r * (2 / 3 * Math.cos(a) + Math.sin(a)),  //got these equations by using trigonometry 
+        y + ship.r * (2 / 3 * Math.sin(a) - Math.cos(a))
+    );
+
+    ctx.lineTo(  //rear right of the ship 
+        x - ship.r * (2 / 3 * Math.cos(a) - Math.sin(a)),  //got these equations by using trigonometry 
+        y + ship.r * (2 / 3 * Math.sin(a) + Math.cos(a))
+    );
+
+    ctx.closePath();  //closes the lines from the right & left rears 
+    ctx.stroke();
 }
 
 
@@ -144,13 +179,16 @@ function newAsteroid(x, y, r) {
 
 
 function newGame() {
-    level = 10; //starts at 0 
+    level = 0; //starts at 0 
+    lives = GAME_LIVES;
     ship = newShip();  //spaceshit object 
     newLevel(); //after each level this will be called 
 }
 
 
 function newLevel() {
+    text = "Level " + (level + 1);
+    textAlpha = 1.0;
     createAsteroidBelt();
 }
 
@@ -299,28 +337,7 @@ function update() {
     //draw triangular ship 
     if (!exploding) {
         if (blinkOn) {  //if blink is on, then we'll draw the ship 
-
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = SHIP_SIZE / 20;
-            ctx.beginPath();
-
-            ctx.moveTo( //nose of the ship 
-                ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
-                ship.y - 4 / 3 * ship.r * Math.sin(ship.a) //negative represents upwards on the screen 
-            );
-
-            ctx.lineTo(  //rear left of the ship 
-                ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),  //got these equations by using trigonometry 
-                ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
-            );
-
-            ctx.lineTo(  //rear right of the ship 
-                ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),  //got these equations by using trigonometry 
-                ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
-            );
-
-            ctx.closePath();  //closes the lines from the right & left rears 
-            ctx.stroke();
+            drawShip(ship.x, ship.y, ship.a);
         }
 
         //handle blinking 
@@ -447,6 +464,23 @@ function update() {
             ctx.arc(ship.lasers[i].x, ship.lasers[i].y, ship.r * 0.25, 0, Math.PI * 2, false);
             ctx.fill();
         }
+    }
+
+
+    //draw the game text 
+    if (textAlpha >= 0) {
+        ctx.textAlign = "center";
+        ctx.textBaseAlign = "middle";
+        ctx.fillStyle = "rgba(255, 255, 255, " + textAlpha + ")";
+        ctx.font = "small-caps " + TEXT_SIZE + "px dejavu sans mono";
+        ctx.fillText(text, canv.width / 2, canv.height * 0.75);
+        textAlpha -= (1.0 / TEXT_FADE_TIME / FPS);
+    }
+
+
+    //draw the lives 
+    for (var i = 0; i < lives; i++) {
+        drawShip(SHIP_SIZE + i * SHIP_SIZE * 1.2, SHIP_SIZE, 0.5 * Math.PI);
     }
 
 
