@@ -28,21 +28,6 @@ var level, roids, ship;
 newGame(); //method for when the game is over 
 
 
-// var ship = {
-//     x: canv.width / 2,
-//     y: canv.height / 2,
-//     r: SHIP_SIZE / 2,   //radius 
-//     a: 90 / 180 * Math.PI,  //a = angle. convert 90 into radians 
-//     explodeTime: 0, //zero frames left of exploding 
-//     rot: 0, //rotation 
-//     pushing: false,  //not stoping 
-//     push: { //sets the magnitude for the push 
-//         x: 0,
-//         y: 0
-//     }
-// }
-
-
 //event handlers 
 //type = "keydown". alerted when one of the keys are pressed 
 //function called = keyDown 
@@ -58,7 +43,7 @@ function createAsteroidBelt() {
     roids = [];
     var x, y;
     //loop
-    for (var i = 0; i < ROID_NUM; i++) {
+    for (var i = 0; i < ROID_NUM + level; i++) {
         //makes it so that asteriod is not positioned on the rocket when starting the game
         do {
             x = Math.floor(Math.random() * canv.width);
@@ -136,12 +121,13 @@ function keyUp(/** @type {KeyboardEvent} */ ev) {
 
 
 function newAsteroid(x, y, r) {
+    var lvlMult = 1 + 0.1 * level; //level multipler 
     var roid = {
         x: x,
         y: y,
         //positive and negative direction they're going 
-        xv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
-        yv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
+        xv: Math.random() * ROID_SPD * lvlMult / FPS * (Math.random() < 0.5 ? 1 : -1),
+        yv: Math.random() * ROID_SPD * lvlMult / FPS * (Math.random() < 0.5 ? 1 : -1),
         r: r,
         a: Math.random() * Math.PI * 2, //in radians 
         vert: Math.floor(Math.random() * (ROID_VERT + 1) + ROID_VERT / 2),
@@ -158,9 +144,13 @@ function newAsteroid(x, y, r) {
 
 
 function newGame() {
-    var ship = newShip();  //spaceshit object 
-    //astroids 
-    var roids = [];
+    level = 10; //starts at 0 
+    ship = newShip();  //spaceshit object 
+    newLevel(); //after each level this will be called 
+}
+
+
+function newLevel() {
     createAsteroidBelt();
 }
 
