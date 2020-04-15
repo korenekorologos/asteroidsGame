@@ -13,7 +13,7 @@ const ROID_NUM = 1; //starting number of astroids
 const ROID_SIZE = 100; //starting size of the astroids in pixels 
 const ROID_SPD = 50; //max starting speed of astroids in pizels per second
 const ROID_VERT = 10; //average number of vertices on each asteroid
-const SAVE_KEY_SCORE = "highscore";
+const SAVE_KEY_SCORE = "highscore"; //save key for local storage of high score 
 const SHIP_BLINK_DUR = 0.1; //duration of the ships blink during invisibility in seconds 
 const SHIP_EXPLODE_DUR = 0.3; //duration of the ships explosion 
 const SHIP_INV_DUR = 3; //duration of the ships invisibility in seconds  
@@ -73,7 +73,7 @@ function destroyAsteroid(index) {
         //same location as above, just in smaller pieces 
         roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8)));
         roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8)));
-        scire += ROID_PTS_MED;
+        score += ROID_PTS_MED;
     } else {
         score += ROID_PTS_SML;
     }
@@ -209,11 +209,12 @@ function newGame() {
     score = 0;
     ship = newShip();  //spaceshit object 
 
+    //get the high score from local storage 
     var scoreStr = localStorage.getItem(SAVE_KEY_SCORE);
     if (scoreStr == null) {
         scoreHigh = 0;
     } else {
-        scoreHigh = parseInt(scoreStr);
+        scoreHigh = parseInt(scoreStr); //using parseInt because it is a string 
     }
     newLevel();
 }
