@@ -570,6 +570,7 @@ function update() {
         }
     }
 
+
     //so that the rocket doesn't get lost off of the screen. this will make it so
     //that it comes back to the screen 
     if (ship.x < 0 - ship.r) {
@@ -647,8 +648,5 @@ function update() {
         }
 
     }
-
-    //ctx.fillStyle = "red";
-    //ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2);
-
 }
+
