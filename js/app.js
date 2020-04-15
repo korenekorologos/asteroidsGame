@@ -87,8 +87,8 @@ function distBetweenPoints(x1, y1, x2, y2) {
 }
 
 
-function drawShip(x, y, a) {
-    ctx.strokeStyle = "white";
+function drawShip(x, y, a, colour = "white") { //white will be the defult colour
+    ctx.strokeStyle = colour;
     ctx.lineWidth = SHIP_SIZE / 20;
     ctx.beginPath();
 
@@ -117,7 +117,19 @@ function explodeShip() {
 }
 
 
+function gameOver() {
+    ship.dead = true; 
+    text = "Game Over!"; 
+    textAlpha = 1.0;  //full capacity 
+}
+
+
 function keyDown(/** @type {KeyboardEvent} */ ev) {
+    
+    if (ship.dead) {
+        return; 
+    }
+    
     switch (ev.keyCode) {  //to make it so that arrow keys can be the only ones pressed 
 
         case 32: //space bar, which allows the shooting 
@@ -137,6 +149,11 @@ function keyDown(/** @type {KeyboardEvent} */ ev) {
 
 
 function keyUp(/** @type {KeyboardEvent} */ ev) {
+
+    if (ship.dead) {
+        return; 
+    }
+
     switch (ev.keyCode) {  //to make it so that arrow keys can be the only ones pressed 
 
         case 32:
@@ -202,6 +219,7 @@ function newShip() {
         blinkNum: Math.ceil(SHIP_INV_DUR / SHIP_BLINK_DUR),  //15 blinks off, 15 blinks on 
         blinkTime: Math.ceil(SHIP_BLINK_DUR * FPS),
         canShoot: true,
+        dead: false, 
         explodeTime: 0, //zero frames left of exploding 
         lasers: [],
         rot: 0, //rotation 
@@ -284,10 +302,9 @@ function update() {
     }
 
 
-
     //push the ship
     //FPS = frames per second 
-    if (ship.pushing) {
+    if (ship.pushing && !ship.dead) {
         ship.push.x += SHIP_PUSH * Math.cos(ship.a) / FPS;
         ship.push.y -= SHIP_PUSH * Math.sin(ship.a) / FPS;
 
@@ -336,7 +353,7 @@ function update() {
 
     //draw triangular ship 
     if (!exploding) {
-        if (blinkOn) {  //if blink is on, then we'll draw the ship 
+        if (blinkOn && !ship.dead) {  //if blink is on, then we'll draw the ship 
             drawShip(ship.x, ship.y, ship.a);
         }
 
@@ -475,12 +492,18 @@ function update() {
         ctx.font = "small-caps " + TEXT_SIZE + "px dejavu sans mono";
         ctx.fillText(text, canv.width / 2, canv.height * 0.75);
         textAlpha -= (1.0 / TEXT_FADE_TIME / FPS);
+    } else if (ship.dead) {
+        // after "game over" fades, start a new game
+        newGame();
     }
+    
 
 
     //draw the lives 
+    var lifeColour; 
     for (var i = 0; i < lives; i++) {
-        drawShip(SHIP_SIZE + i * SHIP_SIZE * 1.2, SHIP_SIZE, 0.5 * Math.PI);
+        lifeColour = exploding && i == lives - 1 ? "red" : "white"; 
+        drawShip(SHIP_SIZE + i * SHIP_SIZE * 1.2, SHIP_SIZE, 0.5 * Math.PI, lifeColour);
     }
 
 
@@ -518,11 +541,12 @@ function update() {
     //create asteroid collisions 
     if (!exploding) {
         //notcheck if not blinking 
-        if (ship.blinkNum == 0) {
+        if (ship.blinkNum == 0 && !ship.dead) {
             for (var i = 0; i < roids.length; i++) {
                 if (distBetweenPoints(ship.x, ship.y, roids[i].x, roids[i].y) < ship.r + roids[i].r) {
                     explodeShip();
                     destroyAsteroid(i);
+                    break; 
                 }
             }
         }
@@ -536,7 +560,12 @@ function update() {
     } else {
         ship.explodeTime--; //reduces the time left on the explosion 
 
+        //reset the ship after the explosion has finished 
         if (ship.explodeTime == 0) {
+            lives--;   //decrementing the lives 
+            if (lives == 0) { //finishes the game 
+                gameOver();
+            }
             ship = newShip();
         }
     }
