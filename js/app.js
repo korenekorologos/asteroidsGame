@@ -6,10 +6,14 @@ const LASER_DIST = 0.6; //max distance laser can travel as fraction of screen wi
 const LASER_EXPLODE_DUR = 0.1; //duration of the lasers' explosion in seconds 
 const LASER_SPD = 500; //speed of lasers in pixels per second 
 const ROID_JAG = 0.4; //jaggedness of the asteroids. 0 = none. 1 = lots 
+const ROID_PTS_LGE = 20; // points scored for a large asteroid
+const ROID_PTS_MED = 50; // points scored for a medium asteroid
+const ROID_PTS_SML = 100; // points scored for a small asteroid
 const ROID_NUM = 1; //starting number of astroids 
 const ROID_SIZE = 100; //starting size of the astroids in pixels 
 const ROID_SPD = 50; //max starting speed of astroids in pizels per second
 const ROID_VERT = 10; //average number of vertices on each asteroid
+const SAVE_KEY_SCORE = "highscore";
 const SHIP_BLINK_DUR = 0.1; //duration of the ships blink during invisibility in seconds 
 const SHIP_EXPLODE_DUR = 0.3; //duration of the ships explosion 
 const SHIP_INV_DUR = 3; //duration of the ships invisibility in seconds  
@@ -27,7 +31,7 @@ var canv = document.getElementById("gameCanvas"); //canvas info
 var ctx = canv.getContext("2d"); //context from canvas 
 
 //sets up the game parameters 
-var level, lives, roids, ship, text, textAlpha;
+var level, lives, roids, score, scoreHigh, ship, text, textAlpha;
 newGame(); //method for when the game is over 
 
 
@@ -69,9 +73,18 @@ function destroyAsteroid(index) {
         //same location as above, just in smaller pieces 
         roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8)));
         roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8)));
+        scire += ROID_PTS_MED;
+    } else {
+        score += ROID_PTS_SML;
     }
-    //destroy the asteriods 
-    //index will be the start number 
+
+    //check high score
+    if (score > scoreHigh) {
+        scoreHigh = score;
+        localStorage.setItem(SAVE_KEY_SCORE, scoreHigh);
+    }
+
+    //destroy the asteriods, index will be the start number 
     roids.splice(index, 1);
 
     //new level when there's no more asteriods 
@@ -91,22 +104,18 @@ function drawShip(x, y, a, colour = "white") { //white will be the defult colour
     ctx.strokeStyle = colour;
     ctx.lineWidth = SHIP_SIZE / 20;
     ctx.beginPath();
-
     ctx.moveTo( //nose of the ship 
         x + 4 / 3 * ship.r * Math.cos(a),
         y - 4 / 3 * ship.r * Math.sin(a) //negative represents upwards on the screen 
     );
-
     ctx.lineTo(  //rear left of the ship 
         x - ship.r * (2 / 3 * Math.cos(a) + Math.sin(a)),  //got these equations by using trigonometry 
         y + ship.r * (2 / 3 * Math.sin(a) - Math.cos(a))
     );
-
     ctx.lineTo(  //rear right of the ship 
         x - ship.r * (2 / 3 * Math.cos(a) - Math.sin(a)),  //got these equations by using trigonometry 
         y + ship.r * (2 / 3 * Math.sin(a) + Math.cos(a))
     );
-
     ctx.closePath();  //closes the lines from the right & left rears 
     ctx.stroke();
 }
@@ -118,18 +127,18 @@ function explodeShip() {
 
 
 function gameOver() {
-    ship.dead = true; 
-    text = "Game Over!"; 
+    ship.dead = true;
+    text = "Game Over!";
     textAlpha = 1.0;  //full capacity 
 }
 
 
 function keyDown(/** @type {KeyboardEvent} */ ev) {
-    
+
     if (ship.dead) {
-        return; 
+        return;
     }
-    
+
     switch (ev.keyCode) {  //to make it so that arrow keys can be the only ones pressed 
 
         case 32: //space bar, which allows the shooting 
@@ -151,7 +160,7 @@ function keyDown(/** @type {KeyboardEvent} */ ev) {
 function keyUp(/** @type {KeyboardEvent} */ ev) {
 
     if (ship.dead) {
-        return; 
+        return;
     }
 
     switch (ev.keyCode) {  //to make it so that arrow keys can be the only ones pressed 
@@ -180,8 +189,8 @@ function newAsteroid(x, y, r) {
         //positive and negative direction they're going 
         xv: Math.random() * ROID_SPD * lvlMult / FPS * (Math.random() < 0.5 ? 1 : -1),
         yv: Math.random() * ROID_SPD * lvlMult / FPS * (Math.random() < 0.5 ? 1 : -1),
-        r: r,
         a: Math.random() * Math.PI * 2, //in radians 
+        r: r,
         vert: Math.floor(Math.random() * (ROID_VERT + 1) + ROID_VERT / 2),
         offs: []
     };
@@ -190,7 +199,6 @@ function newAsteroid(x, y, r) {
     for (var i = 0; i < roid.vert; i++) {
         roid.offs.push(Math.random() * ROID_JAG * 2 + 1 - ROID_JAG);
     }
-
     return roid;
 }
 
@@ -198,8 +206,16 @@ function newAsteroid(x, y, r) {
 function newGame() {
     level = 0; //starts at 0 
     lives = GAME_LIVES;
+    score = 0;
     ship = newShip();  //spaceshit object 
-    newLevel(); //after each level this will be called 
+
+    var scoreStr = localStorage.getItem(SAVE_KEY_SCORE);
+    if (scoreStr == null) {
+        scoreHigh = 0;
+    } else {
+        scoreHigh = parseInt(scoreStr);
+    }
+    newLevel();
 }
 
 
@@ -219,7 +235,7 @@ function newShip() {
         blinkNum: Math.ceil(SHIP_INV_DUR / SHIP_BLINK_DUR),  //15 blinks off, 15 blinks on 
         blinkTime: Math.ceil(SHIP_BLINK_DUR * FPS),
         canShoot: true,
-        dead: false, 
+        dead: false,
         explodeTime: 0, //zero frames left of exploding 
         lasers: [],
         rot: 0, //rotation 
@@ -335,16 +351,6 @@ function update() {
             ctx.fill();
             ctx.stroke();
         }
-
-        // //lime circle around ship 
-        // if (SHOW_BOUNDING) {
-        //     ctx.strokeStyle = "lime";
-        //     ctx.beginPath();
-        //     ctx.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false);
-        //     ctx.stroke();
-        // }
-
-
     } else {
         ship.push.x -= FRICTION * ship.push.x / FPS;
         ship.push.y -= FRICTION * ship.push.y / FPS;
@@ -404,52 +410,6 @@ function update() {
         ctx.stroke();
     }
 
-
-
-    //draw the astriods, loop through each 
-    var x, y, r, a, vert, offs;
-
-
-    for (var i = 0; i < roids.length; i++) {
-        ctx.strokeStyle = "slategrey";
-        ctx.lineWidth = SHIP_SIZE / 20;
-
-        //get the asteroid properties 
-        x = roids[i].x;
-        y = roids[i].y;
-        r = roids[i].r;
-        a = roids[i].a;
-        vert = roids[i].vert;
-        offs = roids[i].offs;
-
-        //draw a path 
-        ctx.beginPath();
-        ctx.moveTo(
-            x + r * offs[0] * Math.cos(a),
-            y + r * offs[0] * Math.sin(a)
-        );
-
-        //draw the polygon 
-        //the polygon sizes and sides are random. they vary from 5-15 sided
-        for (var j = 1; j < vert; j++) {
-            ctx.lineTo(
-                x + r * offs[j] * Math.cos(a + j * Math.PI * 2 / vert),
-                y + r * offs[j] * Math.sin(a + j * Math.PI * 2 / vert)
-            );
-        }
-        ctx.closePath();
-        ctx.stroke(); //draws it 
-
-
-        if (SHOW_BOUNDING) {
-            ctx.strokeStyle = "lime";
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2, false);
-            ctx.stroke();
-        }
-    }
-
-
     //centre dot 
     if (SHOW_CENTRE_DOT) {
         ctx.fillStyle = "red";
@@ -496,16 +456,28 @@ function update() {
         // after "game over" fades, start a new game
         newGame();
     }
-    
 
 
     //draw the lives 
-    var lifeColour; 
+    var lifeColour;
     for (var i = 0; i < lives; i++) {
-        lifeColour = exploding && i == lives - 1 ? "red" : "white"; 
+        lifeColour = exploding && i == lives - 1 ? "red" : "white";
         drawShip(SHIP_SIZE + i * SHIP_SIZE * 1.2, SHIP_SIZE, 0.5 * Math.PI, lifeColour);
     }
 
+    // draw the score
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "white";
+    ctx.font = TEXT_SIZE + "px dejavu sans mono";
+    ctx.fillText(score, canv.width - SHIP_SIZE / 2, SHIP_SIZE);
+
+    // draw the high score
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "white";
+    ctx.font = (TEXT_SIZE * 0.75) + "px dejavu sans mono";
+    ctx.fillText("BEST " + scoreHigh, canv.width / 2, SHIP_SIZE);
 
     //detect laser hits on asteriods 
     //asteriods: ax, ay & ar. lasers: lx, ly 
@@ -546,7 +518,7 @@ function update() {
                 if (distBetweenPoints(ship.x, ship.y, roids[i].x, roids[i].y) < ship.r + roids[i].r) {
                     explodeShip();
                     destroyAsteroid(i);
-                    break; 
+                    break;
                 }
             }
         }
@@ -565,8 +537,9 @@ function update() {
             lives--;   //decrementing the lives 
             if (lives == 0) { //finishes the game 
                 gameOver();
+            } else {
+                ship = newShip();
             }
-            ship = newShip();
         }
     }
 
