@@ -1,12 +1,15 @@
 # atariGame1979
-<br>
-In this game the player is able to pilot their spaceship through the asteroid field, without colliding with any of the asteroids. The spaceship is awarded points for destroying as many asteroids as possible. The high score will default to 100, however it will update to the “high score” from the players previous game. <br>
+
+<h5>
+Here’s a throwback for ya, this game is a copycat to the 1979 Atari Asteriods game. 
+</h5>
+  
+  
+<h5>
+The goal of the game is to simply survive for as long as you can while blowing up as many floating space rocks around you and earning some points. When an asteroid is destroyed, it will be broken into smaller pieces that are much harder to hit and avoid.
+</h5>
 
 
-<strong>The point system is as follows:</strong> Large asteroid 100, Medium asteroid 50, Small asteroid 20
+<h5> Languages/technologies: built with pure Vanilla JavaScript</h5>
 
-
-<strong>Languages/technologies:</strong>
-<br>Vanilla JavaScript 
-<br>
-https://korenekorologos.github.io/asteroidsGame/
+<h5>Wanna play? Click the link: https://korenekorologos.github.io/asteroidsGame/ </h5> 
